@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>共筆白板・腹部</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet"><meta name="theme-color" content="#f5f3ee">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="共筆白板">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="viewport" class="t-select">
+    <div id="world">
+      <div id="frames" class="layer"></div>
+      <div id="items" class="layer"></div>
+      <svg id="links" class="layer"><defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#5b6170"/></marker><marker id="arrS" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2f6fde"/></marker></defs><g id="lg"></g><path id="tmpLink" class="lline" style="display:none;stroke-dasharray:6 5" marker-end="url(#arr)"/></svg>
+      <svg id="ink" class="layer"><g id="ig"></g><path id="live" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect id="frameDraft" fill="rgba(47,111,222,.06)" stroke="#2f6fde" stroke-width="2" stroke-dasharray="8 6" rx="16" style="display:none"/></svg>
+      <div id="labels" class="layer"></div>
+    </div>
+
+    <div id="hint">
+      <h3>這是你的白板，素材都在右邊 →</h3>
+      <ol>
+        <li>先瀏覽右邊的素材，決定<b>「第一節我要學什麼」</b></li>
+        <li>用 <span class="k">區塊</span> 框出第一節，替它取個名字</li>
+        <li>把圖解、表格、重點卡<b>拖</b>進區塊裡，排成你理解的順序（趕時間可以按「整節放上」）</li>
+        <li>用 <span class="k">筆</span> <span class="k">螢光筆</span> 直接在圖上畫，用 <span class="k">文字</span> 寫下自己的話</li>
+        <li>用 <span class="k">連線</span> 把相關的概念串起來，寫上它們的關係</li>
+      </ol>
+    </div>
+
+    <div id="toolbar">
+      <button class="tb" data-tool="select" title="選取／移動 (V)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 3l14 8-6 2-3 6z"/></svg><span class="lbltxt">選取</span></button>
+      <button class="tb" data-tool="hand" title="平移 (H，或按住空白鍵)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 13V5.5a1.5 1.5 0 013 0V12m0-1V4.5a1.5 1.5 0 013 0V12m0-6.5a1.5 1.5 0 013 0V13m0-4.5a1.5 1.5 0 013 0V15a6 6 0 01-6 6h-2a6 6 0 01-5-2.7L4 14.5a1.5 1.5 0 012.4-1.8L8 14.5"/></svg></button>
+      <div class="sep"></div>
+      <button class="tb" data-tool="pen" title="筆 (P)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/></svg><span class="lbltxt">筆</span></button>
+      <button class="tb" data-tool="hl" title="螢光筆 (M)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 15l-3 3h5l1-1M9 15l8-8 3 3-8 8z"/><path d="M4 21h16" stroke-width="3" stroke="#f5c400"/></svg><span class="lbltxt">螢光筆</span></button>
+      <button class="tb" data-tool="eraser" title="橡皮擦 (E)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M7 20h12M4.5 15.5l9-9a2 2 0 012.8 0l2.2 2.2a2 2 0 010 2.8L11 19H8z"/></svg></button>
+      <div class="swatches" id="swatches"></div>
+      <div class="sep"></div>
+      <button class="tb" data-tool="text" title="文字便利貼 (T)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg><span class="lbltxt">文字</span></button>
+      <button class="tb" data-tool="link" title="連線 (L)：從一張卡拖到另一張"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="6" r="2.5"/><path d="M7 16L17 8"/></svg><span class="lbltxt">連線</span></button>
+      <button class="tb" data-tool="frame" title="區塊 (F)：框出一節"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2.5"><rect x="3" y="5" width="18" height="15" rx="3"/></svg><span class="lbltxt">區塊</span></button>
+      <div class="sep"></div>
+      <button class="tb" id="undoBtn" title="復原 (Ctrl+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
+      <button class="tb" id="redoBtn" title="重做 (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></svg></button>
+      <button class="tb" id="menuBtn" title="備份／還原／清空"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+    </div>
+
+    <div id="zoombar">
+      <button class="tb" id="zout" title="縮小">−</button>
+      <span id="zpct">100%</span>
+      <button class="tb" id="zin" title="放大">＋</button>
+      <button class="tb" id="zfit" title="看全部" style="font-size:12px">看全部</button>
+    </div>
+    <div id="status"></div>
+    <button id="shelfToggle"><span id="stIcon">⟩</span><span id="stTxt">收起素材</span></button>
+    <div id="dropzone">放開來加入素材</div>
+  </div>
+
+  <aside id="shelf">
+    <div class="sh-top">
+      <h2>素材庫 <span style="font-size:12px;font-weight:400;color:var(--muted)">腹部課本・5 章</span></h2>
+      <div class="sh-sub">把素材拖到左邊的白板上，自己決定學習順序</div>
+      <div class="prog"><i id="progbar"></i></div>
+      <div class="progtxt"><span id="progtxt">已放上 0 / 0</span><span id="progmsg"></span></div>
+      <input id="search" type="search" placeholder="搜尋：網膜孔、聯合腱、門脈…"><div class="chips" id="chips"></div><div class="chips kinds" id="kchips"></div>
+      <div class="sh-opts">
+        <label><input type="checkbox" id="hidePlaced"> 隱藏已放上的</label>
+        <span id="cnt"></span>
+      </div>
+    </div>
+    <div id="mlist"></div>
+    <div class="sh-add">
+      <div class="row">
+        <button class="bigbtn" id="upBtn">🖼 上傳截圖</button>
+        <button class="bigbtn" id="tBtn">✎ 新增知識卡</button>
+      </div>
+      <div id="tform">
+        <input id="tTitle" placeholder="標題，例如：腹股溝管後壁">
+        <textarea id="tBody" placeholder="內容（每一行會變成一個重點）"></textarea>
+        <div class="row"><button class="gbtn" id="tCancel" style="flex:1">取消</button><button class="pbtn" id="tAdd" style="flex:2">加入素材庫</button></div>
+      </div>
+      <div class="pastehint">也可以直接 <b>Ctrl/⌘+V 貼上截圖</b>，或把圖片檔拖進來</div>
+      <input type="file" id="fileIn" accept="image/*" multiple hidden>
+    </div>
+  </aside>
+</div>
+
+<div id="ghost"></div>
+<div id="modal"><div class="mbox" id="mbox"></div></div>
+<div class="toast" id="toast"></div>
+<script type="module" src="js/app.js"></script>
+<script src="js/pwa.js"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "whiteboard-pwa",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-sw.mjs",
+    "dev": "node scripts/build-sw.mjs && node scripts/serve.mjs 8080"
+  }
+}
