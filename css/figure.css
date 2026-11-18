@@ -1,0 +1,75 @@
+/* 由 scripts/import-book-figs.mjs 產生：《腹部課本》圖解的配色與樣式，限定在 .figsvg / .pv-fig 內 */
+.figsvg,.pv-fig{--surface:#fff;--bg:#f5f6fa;--ink:#1e1c2e;--muted:#5e5b74;--line:#dddbe9;--hema:#4a3e8e;--eosin:#c2506f;--hema-soft:#ebe8f7;--pale:#f1eff8;--t-pink:#f6d3dd;--t-pink2:#eaa9bc;--t-purple:#d9d3f0;--t-purple2:#a99ad8;--t-nuc:#4a3e8e;--t-ct:#efe3ea;--t-fat:#fff8e6;--t-bone:#ede6d3;--t-gray:#c9c6d6;--c-art:#c8364a;--c-ven:#5562b8;--c-lymph:#2f9aa7;--c-bile:#7f9a1f;--c-elec:#e08a12;--c-nerve:#c97a12;--c-good:#2f8f5b;--c-bad:#c8364a;--a-bone:#efe6cf;--a-bone2:#d9c99f;--a-mus:#f2c9c9;--a-mus2:#de9a9a;--a-peri:#3d8f7a;--a-fas:#8a7bc4;--a-org:#e6e1f3;--a-org2:#cfc6ea;--a-fat:#fbf1d6}
+.figsvg svg,.pv-fig svg{color:var(--ink)}
+.figsvg svg text,.pv-fig svg text{fill:currentColor;font-size:12.5px}
+.figsvg svg .sm,.pv-fig svg .sm{font-size:11px}
+.figsvg svg .xs,.pv-fig svg .xs{font-size:10px}
+.figsvg svg .lg,.pv-fig svg .lg{font-size:14px;font-weight:700}
+.figsvg svg .b,.pv-fig svg .b{font-weight:700}
+.figsvg svg .mu,.pv-fig svg .mu{fill:var(--muted)}
+.figsvg svg .ttl,.pv-fig svg .ttl{font-size:13px;font-weight:700;fill:var(--hema)}
+.figsvg svg .ln,.pv-fig svg .ln{stroke:currentColor;fill:none;stroke-width:1.4}
+.figsvg svg .thin,.pv-fig svg .thin{stroke:currentColor;fill:none;stroke-width:1}
+.figsvg svg .dash,.pv-fig svg .dash{stroke-dasharray:4 3}
+.figsvg svg .art,.pv-fig svg .art{stroke:var(--c-art)}
+.figsvg svg .ven,.pv-fig svg .ven{stroke:var(--c-ven)}
+.figsvg svg .lym,.pv-fig svg .lym{stroke:var(--c-lymph)}
+.figsvg svg .bil,.pv-fig svg .bil{stroke:var(--c-bile)}
+.figsvg svg .ele,.pv-fig svg .ele{stroke:var(--c-elec)}
+.figsvg svg .nrv,.pv-fig svg .nrv{stroke:var(--c-nerve)}
+.figsvg svg .f-art,.pv-fig svg .f-art{fill:var(--c-art)}
+.figsvg svg .f-ven,.pv-fig svg .f-ven{fill:var(--c-ven)}
+.figsvg svg .f-lym,.pv-fig svg .f-lym{fill:var(--c-lymph)}
+.figsvg svg .f-bil,.pv-fig svg .f-bil{fill:var(--c-bile)}
+.figsvg svg .f-ele,.pv-fig svg .f-ele{fill:var(--c-elec)}
+.figsvg svg .f-nrv,.pv-fig svg .f-nrv{fill:var(--c-nerve)}
+.figsvg svg .t-art,.pv-fig svg .t-art{fill:var(--c-art)}
+.figsvg svg .t-ven,.pv-fig svg .t-ven{fill:var(--c-ven)}
+.figsvg svg .t-lym,.pv-fig svg .t-lym{fill:var(--c-lymph)}
+.figsvg svg .t-bil,.pv-fig svg .t-bil{fill:var(--c-bile)}
+.figsvg svg .t-ele,.pv-fig svg .t-ele{fill:var(--c-elec)}
+.figsvg svg .t-eo,.pv-fig svg .t-eo{fill:var(--eosin)}
+.figsvg svg .t-he,.pv-fig svg .t-he{fill:var(--hema)}
+.figsvg svg .t-good,.pv-fig svg .t-good{fill:var(--c-good)}
+.figsvg svg .t-bad,.pv-fig svg .t-bad{fill:var(--c-bad)}
+.figsvg svg .pink,.pv-fig svg .pink{fill:var(--t-pink)}
+.figsvg svg .pink2,.pv-fig svg .pink2{fill:var(--t-pink2)}
+.figsvg svg .purp,.pv-fig svg .purp{fill:var(--t-purple)}
+.figsvg svg .purp2,.pv-fig svg .purp2{fill:var(--t-purple2)}
+.figsvg svg .nuc,.pv-fig svg .nuc{fill:var(--t-nuc)}
+.figsvg svg .ct,.pv-fig svg .ct{fill:var(--t-ct)}
+.figsvg svg .fat,.pv-fig svg .fat{fill:var(--t-fat)}
+.figsvg svg .bone,.pv-fig svg .bone{fill:var(--t-bone)}
+.figsvg svg .gray,.pv-fig svg .gray{fill:var(--t-gray)}
+.figsvg svg .surf,.pv-fig svg .surf{fill:var(--surface)}
+.figsvg svg .bgf,.pv-fig svg .bgf{fill:var(--bg)}
+.figsvg svg .palef,.pv-fig svg .palef{fill:var(--pale)}
+.figsvg svg .none,.pv-fig svg .none{fill:none}
+.figsvg svg .stk,.pv-fig svg .stk{stroke:currentColor;stroke-width:1}
+.figsvg svg .stk2,.pv-fig svg .stk2{stroke:currentColor;stroke-width:1.6}
+.figsvg svg .stkm,.pv-fig svg .stkm{stroke:var(--muted);stroke-width:1}
+.figsvg svg .w2,.pv-fig svg .w2{stroke-width:2.4}
+.figsvg svg .w3,.pv-fig svg .w3{stroke-width:3.4}
+.figsvg svg .w5,.pv-fig svg .w5{stroke-width:5}
+.figsvg svg .hl,.pv-fig svg .hl{stroke:var(--eosin);stroke-width:2.2;fill:none}
+.figsvg svg [data-s],.pv-fig svg [data-s]{transition:opacity .35s ease}
+.figsvg svg .dim,.pv-fig svg .dim{opacity:.13}
+.figsvg svg .dot,.pv-fig svg .dot{stroke:var(--surface);stroke-width:1}
+@media (prefers-reduced-motion:reduce){.figsvg svg .dot,.pv-fig svg .dot{display:none}.figsvg svg [data-s],.pv-fig svg [data-s]{transition:none}}
+.figsvg svg .bn,.pv-fig svg .bn{fill:var(--a-bone)}
+.figsvg svg .bn2,.pv-fig svg .bn2{fill:var(--a-bone2)}
+.figsvg svg .ms,.pv-fig svg .ms{fill:var(--a-mus)}
+.figsvg svg .ms2,.pv-fig svg .ms2{fill:var(--a-mus2)}
+.figsvg svg .og,.pv-fig svg .og{fill:var(--a-org)}
+.figsvg svg .og2,.pv-fig svg .og2{fill:var(--a-org2)}
+.figsvg svg .ft,.pv-fig svg .ft{fill:var(--a-fat)}
+.figsvg svg .per,.pv-fig svg .per{stroke:var(--a-peri)}
+.figsvg svg .t-per,.pv-fig svg .t-per{fill:var(--a-peri)}
+.figsvg svg .f-per,.pv-fig svg .f-per{fill:var(--a-peri)}
+.figsvg svg .fas,.pv-fig svg .fas{stroke:var(--a-fas)}
+.figsvg svg .t-fas,.pv-fig svg .t-fas{fill:var(--a-fas)}
+.figsvg svg .t-nrv,.pv-fig svg .t-nrv{fill:var(--c-nerve)}
+.figsvg svg .f-fas,.pv-fig svg .f-fas{fill:var(--a-fas)}
+.figsvg svg .w1,.pv-fig svg .w1{stroke-width:1.2}
+.figsvg svg .op5,.pv-fig svg .op5{opacity:.5}
+.figsvg svg .op3,.pv-fig svg .op3{opacity:.3}

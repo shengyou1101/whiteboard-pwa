@@ -111,6 +111,8 @@ function applyView(){
 }
 function vpRect(){ return vp.getBoundingClientRect(); }
 function toWorld(cx, cy){ const r = vpRect(); return {x:(cx - r.left - view.x) / view.s, y:(cy - r.top - view.y) / view.s}; }
+// 畫面中央的白板座標（「＋ 放上」用；原檔漏了這個函式）
+function viewCenterWorld(){ const r = vpRect(); return toWorld(r.left + r.width / 2, r.top + r.height / 2); }
 function zoomAt(sx, sy, f){
   const ns = Math.min(4, Math.max(0.12, view.s * f));
   const wx = (sx - view.x) / view.s, wy = (sy - view.y) / view.s;
@@ -149,8 +151,47 @@ const kc = k => (KINDS[k] || KINDS.text).c;
 function kindChip(k){ return `<span class="kchip" style="--kc:${kc(k)}">${(KINDS[k] || KINDS.text).n}</span>`; }
 function matBoardHTML(m){
   if(m.kind === 'img') return `<img src="${m.src}" alt="">`;
-  if(m.kind === 'fig') return `<div class="fcard"><div class="fh">${kindChip('fig')}<h4>${esc(m.title)}</h4></div><div class="figsvg">${m.svg}</div>${m.take ? `<p class="take">${esc(m.take)}</p>` : ''}</div>`;
+  if(m.kind === 'fig') return `<div class="fcard"><div class="fh">${kindChip('fig')}<h4>${esc(m.title)}</h4></div><div class="figsvg">${m.svg}</div>${figCtrlHTML(m)}${m.take ? `<p class="take">${esc(m.take)}</p>` : ''}</div>`;
   return `<div class="tcard k-${m.kind}"><div class="fh">${kindChip(m.kind)}<h4>${esc(m.title)}</h4></div><div class="cb">${bodyHTML(m)}</div></div>`;
+}
+
+/* ---------------- 圖解：一步一步看 ----------------
+   沿用《腹部課本》：全景 → 每一步只留下這一步的部分，其他變淡；可以自動播放、隨時暫停
+   （Höffler & Leutner 2007：動畫要分段、可暫停）。目前看到第幾步只記在畫面上，不存檔。 */
+const figStep = new Map(), figTimer = new Map();
+function figCtrlHTML(m){
+  if(!m.steps || m.steps.length < 2) return '';
+  return `<div class="kctrl" role="group" aria-label="逐步看"><button class="kplay" data-fs="play">▶ 自動播放</button>`
+    + m.steps.map((st, i) => `<button data-fs="${i}">${i ? i + ' ' : ''}${esc(st[0])}</button>`).join('')
+    + `</div><p class="ksay" aria-live="polite"></p>`;
+}
+function showFig(id, i, relink = true){
+  const el = itemEls[id], it = getItem(id), m = it && matById(it.matId);
+  if(!el || !m || !m.steps) return;
+  figStep.set(id, i);
+  el.querySelectorAll('.figsvg [data-s]').forEach(e => {
+    const l = ' ' + e.getAttribute('data-s').replace(/,/g, ' ') + ' ';
+    e.classList.toggle('dim', i !== 0 && !l.includes(' ' + i + ' '));
+  });
+  el.querySelectorAll('.kctrl [data-fs]').forEach(b => {
+    if(b.dataset.fs === 'play'){ const on = figTimer.has(id); b.setAttribute('aria-pressed', on); b.textContent = on ? '❚❚ 暫停' : '▶ 自動播放'; }
+    else b.setAttribute('aria-pressed', +b.dataset.fs === i);
+  });
+  // 說明文字來自課本資料（含少量 <b>）
+  el.querySelector('.ksay').innerHTML = (i ? `<span class="k">步驟 ${i}/${m.steps.length - 1}</span>` : '<span class="k">全景</span>') + m.steps[i][1];
+  if(relink) renderLinks();
+}
+function stopFig(id){ clearInterval(figTimer.get(id)); figTimer.delete(id); }
+function nextFig(id){
+  const it = getItem(id), m = it && matById(it.matId);
+  if(!itemEls[id] || !m){ stopFig(id); return; }
+  const cur = figStep.get(id) || 0;
+  showFig(id, cur >= m.steps.length - 1 ? 1 : cur + 1);
+}
+function toggleFigPlay(id){
+  if(figTimer.has(id)){ stopFig(id); showFig(id, figStep.get(id) || 0); return; }
+  figTimer.set(id, setInterval(() => nextFig(id), 3200));
+  nextFig(id);
 }
 
 function renderItems(){
@@ -181,6 +222,7 @@ function renderItems(){
     }
     itemEls[it.id] = el;
     placeEl(it);
+    if(el.querySelector('.kctrl')) showFig(it.id, figStep.get(it.id) || 0, false);
     const im = el.querySelector('img'); if(im && !im.complete) im.addEventListener('load', () => renderLinks(), {once:true});
   }
   markSelection();
@@ -587,6 +629,13 @@ vp.addEventListener('pointerdown', e => {
     updateTmpLink(w); return;
   }
   // select tool
+  const fsb = e.target.closest('[data-fs]');
+  if(fsb){
+    const id = fsb.closest('[data-id]').dataset.id;
+    select({type:'item', id});
+    if(fsb.dataset.fs === 'play') toggleFigPlay(id); else { stopFig(id); showFig(id, +fsb.dataset.fs); }
+    act = {type:'none', pid:e.pointerId}; return;
+  }
   const lblEl = e.target.closest('.lbl[data-link]');
   if(lblEl){ select({type:'link', id:lblEl.dataset.link}); act = {type:'tapLabel', pid:e.pointerId, id:lblEl.dataset.link}; return; }
   const hit = e.target.closest('.lhit');
@@ -751,6 +800,7 @@ function eraseAt(w){
   if(S.strokes.length !== before){ renderInk(); updateHint(); }
 }
 function removeItem(id){
+  stopFig(id);
   begin();
   S.items = S.items.filter(i => i.id !== id);
   S.links = S.links.filter(l => l.from !== id && l.to !== id);

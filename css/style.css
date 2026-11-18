@@ -180,3 +180,13 @@ svg.layer{width:1px;height:1px;overflow:visible;pointer-events:none}
   #app.shelf-closed #shelf{margin-right:-310px}
   .tb .lbltxt{display:none}
 }
+
+/* ---------- 圖解：一步一步看 ---------- */
+.fcard .kctrl{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.fcard .kctrl button{font-size:12px;line-height:1.2;border:1px solid #dddbe9;background:#fff;color:#1e1c2e;border-radius:999px;padding:5px 10px;min-height:30px;cursor:pointer;touch-action:manipulation}
+.fcard .kctrl button[aria-pressed="true"]{background:#4a3e8e;border-color:#4a3e8e;color:#fff}
+.fcard .kctrl .kplay{color:#c2506f;border-color:#c2506f}
+.fcard .kctrl .kplay[aria-pressed="true"]{background:#c2506f;color:#fff}
+.fcard .ksay{margin:8px 0 0;min-height:5.1em;background:#f1eff8;border-radius:8px;padding:8px 11px;font-size:13px;line-height:1.7;color:#1e1c2e}
+.fcard .ksay b{color:#4a3e8e}
+.fcard .ksay .k{font-size:11px;color:#c2506f;margin-right:6px;font-weight:700}
