@@ -1,5 +1,5 @@
 // 由 scripts/build-sw.mjs 產生，請勿直接修改 sw.js（改 scripts/sw.template.js）
-const VERSION = '53e20e80c4';
+const VERSION = 'f34b760b07';
 const PRECACHE = [
   "./",
   "index.html",
@@ -33,7 +33,7 @@ const CACHE = 'whiteboard-' + VERSION;
 const FONT_CACHE = 'whiteboard-fonts';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(PRECACHE.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
