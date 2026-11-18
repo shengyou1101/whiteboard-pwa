@@ -1,5 +1,5 @@
 // 由 scripts/build-sw.mjs 產生，請勿直接修改 sw.js（改 scripts/sw.template.js）
-const VERSION = '46e398ae5f';
+const VERSION = '53e20e80c4';
 const PRECACHE = [
   "./",
   "index.html",

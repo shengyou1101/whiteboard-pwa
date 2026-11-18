@@ -102,8 +102,12 @@ function undo(){ if(!undoStack.length) return; redoStack.push(snap()); S = JSON.
 function redo(){ if(!redoStack.length) return; undoStack.push(snap()); S = JSON.parse(redoStack.pop()); selected = null; renderAll(); save(); }
 
 /* ---------------- view ---------------- */
+let crispT = null;
 function applyView(){
   world.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  // 平移縮放時用 will-change 讓畫面順；停下來 0.2 秒後拿掉，瀏覽器就會用目前的倍率重新畫出清晰的線條
+  world.style.willChange = 'transform';
+  clearTimeout(crispT); crispT = setTimeout(() => { world.style.willChange = 'auto'; }, 200);
   const g = 24 * view.s;
   vp.style.backgroundSize = `${g}px ${g}px`;
   vp.style.backgroundPosition = `${view.x}px ${view.y}px`;
@@ -276,11 +280,48 @@ function pathD(p){
   const l = p[p.length-1]; d += `L${l[0]} ${l[1]}`;
   return d;
 }
+/* 筆壓：Apple Pencil 的每個點存成 [x, y, 壓力]，畫成寬度跟著壓力變的填色外框。
+   舊筆畫（[x, y]）與螢光筆維持固定寬度。 */
+const hasPressure = s => !s.hl && s.pts.length && s.pts[0].length > 2;
+function smoothThrough(p, d){
+  for(let i = 1; i < p.length - 1; i++)
+    d += `Q${p[i][0].toFixed(1)} ${p[i][1].toFixed(1)} ${((p[i][0] + p[i+1][0]) / 2).toFixed(1)} ${((p[i][1] + p[i+1][1]) / 2).toFixed(1)}`;
+  const l = p[p.length - 1];
+  return d + `L${l[0].toFixed(1)} ${l[1].toFixed(1)}`;
+}
+function outlineD(pts, w){
+  const n = pts.length;
+  let pr = pts[0][2];
+  const r = pts.map(p => { pr = pr * .6 + p[2] * .4; return Math.max(w * .12, w / 2 * (.25 + 1.5 * pr)); });
+  if(n === 1){ const [x, y] = pts[0], q = r[0]; return `M${x - q} ${y}a${q} ${q} 0 1 0 ${2*q} 0a${q} ${q} 0 1 0 ${-2*q} 0`; }
+  const L = [], R = [];
+  for(let i = 0; i < n; i++){
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(n - 1, i + 1)];
+    let tx = b[0] - a[0], ty = b[1] - a[1]; const len = Math.hypot(tx, ty) || 1; tx /= len; ty /= len;
+    L.push([pts[i][0] - ty * r[i], pts[i][1] + tx * r[i]]);
+    R.push([pts[i][0] + ty * r[i], pts[i][1] - tx * r[i]]);
+  }
+  R.reverse();
+  const re = r[n - 1].toFixed(1), rs = r[0].toFixed(1);
+  let d = smoothThrough(L, `M${L[0][0].toFixed(1)} ${L[0][1].toFixed(1)}`);
+  d += `A${re} ${re} 0 0 0 ${R[0][0].toFixed(1)} ${R[0][1].toFixed(1)}`;
+  d = smoothThrough(R, d);
+  return d + `A${rs} ${rs} 0 0 0 ${L[0][0].toFixed(1)} ${L[0][1].toFixed(1)}Z`;
+}
+function strokePathHTML(s){
+  if(hasPressure(s)) return `<path d="${outlineD(s.pts, s.w)}" fill="${s.color}" stroke="none"/>`;
+  return `<path d="${pathD(s.pts)}" fill="none" stroke-linecap="round" stroke-linejoin="round" ${strokeAttrs(s)}/>`;
+}
+function drawLive(a){
+  const live = $('live');
+  if(hasPressure(a)){ live.setAttribute('d', outlineD(a.pts, a.w)); live.setAttribute('fill', a.color); live.setAttribute('stroke', 'none'); }
+  else { live.setAttribute('d', pathD(a.pts)); live.setAttribute('fill', 'none'); live.setAttribute('stroke', a.color); }
+}
 function strokeAttrs(s){
   return s.hl ? `stroke="${s.color}" stroke-width="${s.w}" stroke-opacity=".42" style="mix-blend-mode:multiply"` : `stroke="${s.color}" stroke-width="${s.w}"`;
 }
 function renderInk(){
-  $('ig').innerHTML = S.strokes.map(s => `<path d="${pathD(s.pts)}" fill="none" stroke-linecap="round" stroke-linejoin="round" ${strokeAttrs(s)}/>`).join('');
+  $('ig').innerHTML = S.strokes.map(strokePathHTML).join('');
 }
 function renderAll(){
   renderItems(); renderInk();
@@ -586,6 +627,7 @@ function editLinkLabel(id){
 
 /* ---------------- board pointer handling ---------------- */
 const touches = new Map();
+let fingerTap = null;   // 多指點一下：兩指＝復原、三指＝重做
 let act = null;   // current action
 const lastTap = {};
 vp.addEventListener('pointerdown', e => {
@@ -594,6 +636,8 @@ vp.addEventListener('pointerdown', e => {
   if(e.pointerType === 'pen') penSeen = true;
   if(e.pointerType === 'touch'){
     touches.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(touches.size === 1) fingerTap = {t:Date.now(), n:1, moved:false, start:new Map()};
+    if(fingerTap){ fingerTap.n = Math.max(fingerTap.n, touches.size); fingerTap.start.set(e.pointerId, {x:e.clientX, y:e.clientY}); }
     if(touches.size === 2){ cancelAct(); startPinch(); return; }
     if(touches.size > 2) return;
   }
@@ -605,9 +649,10 @@ vp.addEventListener('pointerdown', e => {
 
   if(tool === 'pen' || tool === 'hl'){
     const hl = tool === 'hl';
-    act = {type:'draw', pid:e.pointerId, pts:[[+w.x.toFixed(1), +w.y.toFixed(1)]], hl, color: hl ? hlColor : penColor, w: hl ? 18 : 2.6};
-    const live = $('live'); live.setAttribute('d', pathD(act.pts));
-    live.setAttribute('stroke', act.color); live.setAttribute('stroke-width', act.w);
+    const pr = !hl && e.pointerType === 'pen';
+    act = {type:'draw', pid:e.pointerId, pr, pts:[ptOf(w, e, pr)], hl, color: hl ? hlColor : penColor, w: hl ? 18 : 2.6};
+    const live = $('live'); drawLive(act);
+    live.setAttribute('stroke-width', act.w);
     live.setAttribute('stroke-opacity', hl ? .42 : 1); live.style.mixBlendMode = hl ? 'multiply' : '';
     return;
   }
@@ -664,6 +709,11 @@ vp.addEventListener('pointerdown', e => {
   startPan(e, sx, sy);
 });
 
+function ptOf(w, e, pr){
+  const p = [+w.x.toFixed(1), +w.y.toFixed(1)];
+  if(pr) p.push(+Math.min(1, Math.max(.05, e.pressure || .5)).toFixed(2));
+  return p;
+}
 function startPan(e, sx, sy){ act = {type:'pan', pid:e.pointerId, sx, sy, vx:view.x, vy:view.y}; vp.classList.add('panning'); }
 function startPinch(){
   const [a, b] = [...touches.values()];
@@ -679,7 +729,11 @@ function cancelAct(){
 }
 
 vp.addEventListener('pointermove', e => {
-  if(e.pointerType === 'touch' && touches.has(e.pointerId)) touches.set(e.pointerId, {x:e.clientX, y:e.clientY});
+  if(e.pointerType === 'touch' && touches.has(e.pointerId)){
+    touches.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const st = fingerTap && fingerTap.start.get(e.pointerId);
+    if(st && Math.hypot(e.clientX - st.x, e.clientY - st.y) > 12) fingerTap.moved = true;
+  }
   if(!act) return;
   if(act.type === 'pinch'){
     if(touches.size < 2) return;
@@ -695,10 +749,10 @@ vp.addEventListener('pointermove', e => {
   switch(act.type){
     case 'pan': view.x = act.vx + sx - act.sx; view.y = act.vy + sy - act.sy; applyView(); break;
     case 'draw': {
-      const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      let evs = e.getCoalescedEvents ? e.getCoalescedEvents() : []; if(!evs.length) evs = [e];
       for(const ce of evs){ const p = toWorld(ce.clientX, ce.clientY); const l = act.pts[act.pts.length-1];
-        if(Math.hypot(p.x - l[0], p.y - l[1]) * view.s > 1.5) act.pts.push([+p.x.toFixed(1), +p.y.toFixed(1)]); }
-      $('live').setAttribute('d', pathD(act.pts)); break;
+        if(Math.hypot(p.x - l[0], p.y - l[1]) * view.s > 1.5) act.pts.push(ptOf(p, ce, act.pr)); }
+      drawLive(act); break;
     }
     case 'erase': eraseAt(w); break;
     case 'frame': {
@@ -713,7 +767,7 @@ vp.addEventListener('pointermove', e => {
       if(Math.hypot(dx, dy) * view.s > 3) act.moved = true;
       act.it.x = act.x0 + dx; act.it.y = act.y0 + dy; placeEl(act.it);
       for(const k of act.kids){ k.o.x = k.x + dx; k.o.y = k.y + dy; placeEl(k.o); }
-      if(act.kidStrokes.length){ for(const k of act.kidStrokes) k.s.pts = k.pts.map(([x,y]) => [+(x+dx).toFixed(1), +(y+dy).toFixed(1)]); renderInk(); }
+      if(act.kidStrokes.length){ for(const k of act.kidStrokes) k.s.pts = k.pts.map(([x,y,...rest]) => [+(x+dx).toFixed(1), +(y+dy).toFixed(1), ...rest]); renderInk(); }
       renderLinks(); break;
     }
     case 'resize': {
@@ -725,7 +779,16 @@ vp.addEventListener('pointermove', e => {
   }
 });
 function endPointer(e){
-  if(e.pointerType === 'touch') touches.delete(e.pointerId);
+  if(e.pointerType === 'touch'){
+    touches.delete(e.pointerId);
+    if(!touches.size && fingerTap){
+      const t = fingerTap; fingerTap = null;
+      if(!t.moved && e.type !== 'pointercancel' && Date.now() - t.t < 350){
+        if(t.n === 2){ undo(); toast('已復原'); }
+        else if(t.n === 3){ redo(); toast('已重做'); }
+      }
+    }
+  }
   if(!act) return;
   if(act.type === 'pinch'){ if(touches.size < 2){ act = null; save(); } return; }
   if(e.pointerId !== act.pid) return;

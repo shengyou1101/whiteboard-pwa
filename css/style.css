@@ -18,7 +18,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 #viewport.t-eraser{cursor:cell}
 #viewport.t-text{cursor:text}
 #viewport.t-frame,#viewport.t-link{cursor:crosshair}
-#world{position:absolute;left:0;top:0;transform-origin:0 0;will-change:transform}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
 .layer{position:absolute;left:0;top:0}
 svg.layer{width:1px;height:1px;overflow:visible;pointer-events:none}
 
